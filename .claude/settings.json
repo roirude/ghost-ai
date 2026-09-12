@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx shadcn@latest init -d)",
+      "Bash(npx shadcn@latest init --help)",
+      "Bash(rm -rf components components.json lib)",
+      "Bash(git checkout *)",
+      "Bash(npm ls *)",
+      "Bash(npm prune *)",
+      "Bash(npx shadcn@latest init --base radix --template next -y)",
+      "Bash(npx shadcn@latest init --preset base --base radix --template next -y)",
+      "Bash(npx shadcn@latest add --help)",
+      "Bash(npm view *)",
+      "Bash(npx tsc *)",
+      "Bash(npx next *)",
+      "Bash(npx eslint *)",
+      "Bash(npx --yes playwright --version)"
+    ]
+  }
+}
