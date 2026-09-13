@@ -8,9 +8,20 @@ import { EditorHome } from "@/components/editor/editor-home";
 import { EditorNavbar } from "@/components/editor/editor-navbar";
 import { ProjectSidebar } from "@/components/editor/project-sidebar";
 import { RenameProjectDialog } from "@/components/editor/rename-project-dialog";
-import { useProjectDialogs } from "@/hooks/use-project-dialogs";
+import { useProjectActions } from "@/hooks/use-project-actions";
+import type { Project } from "@/types/project";
 
-export function EditorShell() {
+interface EditorShellProps {
+  ownedProjects: Project[];
+  sharedProjects: Project[];
+  activeProjectId?: string;
+}
+
+export function EditorShell({
+  ownedProjects,
+  sharedProjects,
+  activeProjectId,
+}: EditorShellProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const {
     dialog,
@@ -23,7 +34,7 @@ export function EditorShell() {
     openDeleteDialog,
     closeDialog,
     submit,
-  } = useProjectDialogs();
+  } = useProjectActions(activeProjectId);
 
   return (
     <div className="relative flex h-full min-h-0 flex-1 flex-col">
@@ -34,6 +45,8 @@ export function EditorShell() {
       <div className="relative flex flex-1 overflow-hidden">
         <ProjectSidebar
           isOpen={isSidebarOpen}
+          ownedProjects={ownedProjects}
+          sharedProjects={sharedProjects}
           onClose={() => setIsSidebarOpen(false)}
           onCreateProject={openCreateDialog}
           onRenameProject={openRenameDialog}

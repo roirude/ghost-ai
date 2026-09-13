@@ -4,12 +4,13 @@ import { FolderOpen, Pencil, Plus, Trash2, Users, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MOCK_OWNED_PROJECTS, MOCK_SHARED_PROJECTS } from "@/lib/mock-projects";
 import { cn } from "@/lib/utils";
 import type { Project } from "@/types/project";
 
 interface ProjectSidebarProps {
   isOpen: boolean;
+  ownedProjects: Project[];
+  sharedProjects: Project[];
   onClose: () => void;
   onCreateProject: () => void;
   onRenameProject: (project: Project) => void;
@@ -54,6 +55,8 @@ function ProjectListItem({ project, onRename, onDelete }: ProjectListItemProps) 
 
 export function ProjectSidebar({
   isOpen,
+  ownedProjects,
+  sharedProjects,
   onClose,
   onCreateProject,
   onRenameProject,
@@ -90,9 +93,9 @@ export function ProjectSidebar({
           </TabsList>
 
           <TabsContent value="my-projects" className="flex flex-1 flex-col overflow-y-auto">
-            {MOCK_OWNED_PROJECTS.length > 0 ? (
+            {ownedProjects.length > 0 ? (
               <div className="flex flex-col gap-1 py-2">
-                {MOCK_OWNED_PROJECTS.map((project) => (
+                {ownedProjects.map((project) => (
                   <ProjectListItem
                     key={project.id}
                     project={project}
@@ -110,9 +113,9 @@ export function ProjectSidebar({
           </TabsContent>
 
           <TabsContent value="shared" className="flex flex-1 flex-col overflow-y-auto">
-            {MOCK_SHARED_PROJECTS.length > 0 ? (
+            {sharedProjects.length > 0 ? (
               <div className="flex flex-col gap-1 py-2">
-                {MOCK_SHARED_PROJECTS.map((project) => (
+                {sharedProjects.map((project) => (
                   <ProjectListItem
                     key={project.id}
                     project={project}
