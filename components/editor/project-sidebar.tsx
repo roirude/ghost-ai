@@ -11,6 +11,7 @@ interface ProjectSidebarProps {
   isOpen: boolean;
   ownedProjects: Project[];
   sharedProjects: Project[];
+  activeProjectId?: string;
   onClose: () => void;
   onCreateProject: () => void;
   onRenameProject: (project: Project) => void;
@@ -19,13 +20,19 @@ interface ProjectSidebarProps {
 
 interface ProjectListItemProps {
   project: Project;
+  isActive: boolean;
   onRename: (project: Project) => void;
   onDelete: (project: Project) => void;
 }
 
-function ProjectListItem({ project, onRename, onDelete }: ProjectListItemProps) {
+function ProjectListItem({ project, isActive, onRename, onDelete }: ProjectListItemProps) {
   return (
-    <div className="group flex items-center justify-between rounded-xl px-2 py-2 hover:bg-bg-subtle">
+    <div
+      className={cn(
+        "group flex items-center justify-between rounded-xl px-2 py-2 hover:bg-bg-subtle",
+        isActive && "bg-bg-subtle ring-1 ring-inset ring-brand"
+      )}
+    >
       <span className="truncate text-sm text-copy-primary">{project.name}</span>
       {project.isOwner && (
         <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
@@ -57,6 +64,7 @@ export function ProjectSidebar({
   isOpen,
   ownedProjects,
   sharedProjects,
+  activeProjectId,
   onClose,
   onCreateProject,
   onRenameProject,
@@ -66,16 +74,20 @@ export function ProjectSidebar({
     <>
       {isOpen && (
         <div
-          className="absolute inset-0 z-30 bg-black/60 md:hidden"
+          className="absolute inset-0 z-30 bg-black/50 md:hidden"
           onClick={onClose}
           aria-hidden="true"
         />
       )}
 
+      {/*
+        Anchored to the edge rather than inset, so the closed state is a plain
+        -100% slide that leaves nothing — shadow or rounded corner — on screen.
+      */}
       <aside
         className={cn(
-          "absolute top-3 left-3 bottom-3 z-40 flex w-72 flex-col rounded-2xl border border-surface-border bg-bg-surface/95 shadow-lg backdrop-blur-sm transition-transform duration-200 ease-out",
-          isOpen ? "translate-x-0" : "-translate-x-[calc(100%+0.75rem)]"
+          "absolute inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-surface-border bg-bg-surface/95 shadow-[8px_0_24px_-12px_rgba(0,0,0,0.7)] backdrop-blur-sm transition-transform duration-200 ease-out",
+          isOpen ? "translate-x-0" : "-translate-x-full"
         )}
         aria-hidden={!isOpen}
       >
@@ -99,6 +111,7 @@ export function ProjectSidebar({
                   <ProjectListItem
                     key={project.id}
                     project={project}
+                    isActive={project.id === activeProjectId}
                     onRename={onRenameProject}
                     onDelete={onDeleteProject}
                   />
@@ -119,6 +132,7 @@ export function ProjectSidebar({
                   <ProjectListItem
                     key={project.id}
                     project={project}
+                    isActive={project.id === activeProjectId}
                     onRename={onRenameProject}
                     onDelete={onDeleteProject}
                   />

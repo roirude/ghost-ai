@@ -37,16 +37,17 @@ export function EditorShell({
   } = useProjectActions(activeProjectId);
 
   return (
-    <div className="relative flex h-full min-h-0 flex-1 flex-col">
+    <div className="fixed inset-0 flex flex-col bg-bg-base">
       <EditorNavbar
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => setIsSidebarOpen((open) => !open)}
       />
-      <div className="relative flex flex-1 overflow-hidden">
+      <div className="relative min-h-0 flex-1 overflow-hidden">
         <ProjectSidebar
           isOpen={isSidebarOpen}
           ownedProjects={ownedProjects}
           sharedProjects={sharedProjects}
+          activeProjectId={activeProjectId}
           onClose={() => setIsSidebarOpen(false)}
           onCreateProject={openCreateDialog}
           onRenameProject={openRenameDialog}

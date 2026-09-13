@@ -10,7 +10,7 @@ interface EditorHomeProps {
 
 export function EditorHome({ onCreateProject }: EditorHomeProps) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-center">
       <div className="flex flex-col gap-2">
         <h1 className="text-xl font-semibold text-copy-primary">
           Create a project or open an existing one
