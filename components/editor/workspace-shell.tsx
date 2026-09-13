@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { CanvasRoom } from "@/components/editor/canvas-room";
 import { CreateProjectDialog } from "@/components/editor/create-project-dialog";
@@ -8,6 +8,8 @@ import { DeleteProjectDialog } from "@/components/editor/delete-project-dialog";
 import { ProjectSidebar } from "@/components/editor/project-sidebar";
 import { RenameProjectDialog } from "@/components/editor/rename-project-dialog";
 import { ShareDialog } from "@/components/editor/share-dialog";
+import { StarterTemplatesModal } from "@/components/editor/starter-templates-modal";
+import type { CanvasTemplate } from "@/components/editor/starter-templates";
 import { WorkspaceNavbar } from "@/components/editor/workspace-navbar";
 import { useProjectActions } from "@/hooks/use-project-actions";
 import { useShareDialog } from "@/hooks/use-share-dialog";
@@ -28,6 +30,29 @@ export function WorkspaceShell({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isAiSidebarOpen, setIsAiSidebarOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
+
+  // The canvas publishes its import action here once the room is connected.
+  // A ref rather than state on purpose: the shell only ever *calls* this, so
+  // storing it in state would re-render the whole workspace on every canvas
+  // edit (the callback's identity tracks the current node/edge lists).
+  const importTemplateRef = useRef<((template: CanvasTemplate) => void) | null>(
+    null,
+  );
+
+  const handleImportReady = useCallback(
+    (importTemplate: (template: CanvasTemplate) => void) => {
+      importTemplateRef.current = importTemplate;
+    },
+    [],
+  );
+
+  const handleImportTemplate = useCallback((template: CanvasTemplate) => {
+    // Null only while the room is still suspended, in which case the navbar
+    // button has not been reachable yet anyway.
+    importTemplateRef.current?.(template);
+  }, []);
+
   const {
     dialog,
     name,
@@ -62,6 +87,7 @@ export function WorkspaceShell({
         isAiSidebarOpen={isAiSidebarOpen}
         onToggleAiSidebar={() => setIsAiSidebarOpen((open) => !open)}
         onOpenShare={() => setIsShareOpen(true)}
+        onOpenTemplates={() => setIsTemplatesOpen(true)}
       />
       {/*
         The canvas owns this whole region and is never resized by chrome: the
@@ -70,7 +96,7 @@ export function WorkspaceShell({
       */}
       <div className="relative min-h-0 flex-1 overflow-hidden bg-bg-base">
         <div className="absolute inset-0">
-          <CanvasRoom roomId={project.id} />
+          <CanvasRoom roomId={project.id} onImportReady={handleImportReady} />
         </div>
 
         <ProjectSidebar
@@ -126,6 +152,12 @@ export function WorkspaceShell({
         project={dialog?.type === "delete" ? dialog.project : null}
         isLoading={isLoading}
         onConfirm={submit}
+      />
+
+      <StarterTemplatesModal
+        open={isTemplatesOpen}
+        onOpenChange={setIsTemplatesOpen}
+        onImport={handleImportTemplate}
       />
 
       <ShareDialog

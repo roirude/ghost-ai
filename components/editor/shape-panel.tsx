@@ -11,6 +11,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { useShapeDragPreview } from "@/hooks/use-shape-drag-preview";
 import {
   DEFAULT_SHAPE_SIZES,
   SHAPE_DRAG_MIME,
@@ -53,6 +54,8 @@ function handleDragStart(
 
 /** Floating pill toolbar of draggable shapes, centered at the canvas bottom. */
 export function ShapePanel() {
+  const { showPreview, hidePreview } = useShapeDragPreview();
+
   return (
     <div className="pointer-events-none absolute bottom-6 left-1/2 z-20 -translate-x-1/2">
       <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-surface-border bg-bg-surface/95 p-2 shadow-lg backdrop-blur">
@@ -61,7 +64,13 @@ export function ShapePanel() {
             key={shape}
             type="button"
             draggable
-            onDragStart={(event) => handleDragStart(event, shape)}
+            onDragStart={(event) => {
+              // The ghost must be installed before the payload is written:
+              // `setDragImage` only takes effect while `dragstart` is running.
+              showPreview(event, shape);
+              handleDragStart(event, shape);
+            }}
+            onDragEnd={hidePreview}
             title={`Drag to add a ${label.toLowerCase()}`}
             aria-label={`Drag to add a ${label.toLowerCase()}`}
             className="flex size-9 cursor-grab items-center justify-center rounded-full text-copy-secondary transition-colors hover:bg-bg-subtle hover:text-copy-primary active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
