@@ -1,16 +1,17 @@
 "use client";
 
-import { UserButton } from "@clerk/nextjs";
 import {
   LayoutTemplate,
   PanelLeftClose,
   PanelLeftOpen,
-  PanelRightClose,
-  PanelRightOpen,
   Share2,
+  Sparkles,
 } from "lucide-react";
 
+import { SaveStatusButton } from "@/components/editor/save-status-button";
 import { Button } from "@/components/ui/button";
+import type { CanvasSaveStatus } from "@/hooks/use-canvas-autosave";
+import { cn } from "@/lib/utils";
 
 interface WorkspaceNavbarProps {
   projectName: string;
@@ -20,6 +21,9 @@ interface WorkspaceNavbarProps {
   onToggleAiSidebar: () => void;
   onOpenShare: () => void;
   onOpenTemplates: () => void;
+  saveStatus: CanvasSaveStatus;
+  /** Manual save, routed through the same function the autosave hook uses. */
+  onSave: () => void;
 }
 
 export function WorkspaceNavbar({
@@ -30,6 +34,8 @@ export function WorkspaceNavbar({
   onToggleAiSidebar,
   onOpenShare,
   onOpenTemplates,
+  saveStatus,
+  onSave,
 }: WorkspaceNavbarProps) {
   return (
     <nav className="flex h-14 w-full shrink-0 items-center justify-between border-b border-surface-border bg-bg-surface px-3">
@@ -53,6 +59,7 @@ export function WorkspaceNavbar({
         </span>
       </div>
       <div className="flex flex-1 items-center justify-end gap-2">
+        <SaveStatusButton status={saveStatus} onSave={onSave} />
         <Button variant="ghost" size="sm" onClick={onOpenTemplates}>
           <LayoutTemplate className="size-4" />
           Templates
@@ -62,18 +69,19 @@ export function WorkspaceNavbar({
           Share
         </Button>
         <Button
-          variant="ghost"
-          size="icon"
+          variant="outline"
+          size="sm"
           onClick={onToggleAiSidebar}
+          aria-expanded={isAiSidebarOpen}
           aria-label={isAiSidebarOpen ? "Close AI sidebar" : "Open AI sidebar"}
-        >
-          {isAiSidebarOpen ? (
-            <PanelRightClose className="size-5" />
-          ) : (
-            <PanelRightOpen className="size-5" />
+          className={cn(
+            "border-accent-ai/40 text-accent-ai-text hover:bg-accent-ai/10",
+            isAiSidebarOpen && "border-accent-ai bg-accent-ai/15"
           )}
+        >
+          <Sparkles className="size-4" />
+          AI
         </Button>
-        <UserButton />
       </div>
     </nav>
   );

@@ -142,6 +142,14 @@ export interface ShapeDragPayload {
   shape: CanvasNodeShape;
   width: number;
   height: number;
+  /**
+   * Where inside the drag ghost the user actually grabbed it, in the ghost's
+   * own pixels. The drop handler subtracts this from the cursor so the node
+   * lands where the preview was shown rather than hanging off the cursor by
+   * however far from the ghost's origin the pointer went down.
+   */
+  grabOffsetX: number;
+  grabOffsetY: number;
 }
 
 /** Custom MIME type used for shape drags out of the shape panel. */
@@ -159,10 +167,19 @@ export function parseShapeDragPayload(raw: string): ShapeDragPayload | null {
 
   if (typeof parsed !== "object" || parsed === null) return null;
 
-  const { shape, width, height } = parsed as Record<string, unknown>;
+  const { shape, width, height, grabOffsetX, grabOffsetY } =
+    parsed as Record<string, unknown>;
 
   if (typeof shape !== "string" || !(shape in DEFAULT_SHAPE_SIZES)) return null;
   if (typeof width !== "number" || typeof height !== "number") return null;
 
-  return { shape: shape as CanvasNodeShape, width, height };
+  return {
+    shape: shape as CanvasNodeShape,
+    width,
+    height,
+    // Older payloads (a drag started before a deploy) carry no grab offset;
+    // falling back to the ghost's centre matches where `setDragImage` pins it.
+    grabOffsetX: typeof grabOffsetX === "number" ? grabOffsetX : width / 2,
+    grabOffsetY: typeof grabOffsetY === "number" ? grabOffsetY : height / 2,
+  };
 }

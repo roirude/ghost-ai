@@ -13,6 +13,7 @@ interface ProjectSidebarProps {
   sharedProjects: Project[];
   activeProjectId?: string;
   onClose: () => void;
+  onSelectProject: (project: Project) => void;
   onCreateProject: () => void;
   onRenameProject: (project: Project) => void;
   onDeleteProject: (project: Project) => void;
@@ -21,11 +22,18 @@ interface ProjectSidebarProps {
 interface ProjectListItemProps {
   project: Project;
   isActive: boolean;
+  onSelect: (project: Project) => void;
   onRename: (project: Project) => void;
   onDelete: (project: Project) => void;
 }
 
-function ProjectListItem({ project, isActive, onRename, onDelete }: ProjectListItemProps) {
+function ProjectListItem({
+  project,
+  isActive,
+  onSelect,
+  onRename,
+  onDelete,
+}: ProjectListItemProps) {
   return (
     <div
       className={cn(
@@ -33,7 +41,19 @@ function ProjectListItem({ project, isActive, onRename, onDelete }: ProjectListI
         isActive && "bg-bg-subtle ring-1 ring-inset ring-brand"
       )}
     >
-      <span className="truncate text-sm text-copy-primary">{project.name}</span>
+      {/*
+        A sibling button rather than a clickable wrapper: the rename/delete
+        controls would otherwise be nested inside it, which is invalid markup
+        and would need propagation guards on every action.
+      */}
+      <button
+        type="button"
+        onClick={() => onSelect(project)}
+        aria-current={isActive ? "page" : undefined}
+        className="min-w-0 flex-1 truncate rounded-lg text-left text-sm text-copy-primary outline-none focus-visible:ring-2 focus-visible:ring-brand"
+      >
+        {project.name}
+      </button>
       {project.isOwner && (
         <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
           <Button
@@ -66,6 +86,7 @@ export function ProjectSidebar({
   sharedProjects,
   activeProjectId,
   onClose,
+  onSelectProject,
   onCreateProject,
   onRenameProject,
   onDeleteProject,
@@ -112,6 +133,7 @@ export function ProjectSidebar({
                     key={project.id}
                     project={project}
                     isActive={project.id === activeProjectId}
+                    onSelect={onSelectProject}
                     onRename={onRenameProject}
                     onDelete={onDeleteProject}
                   />
@@ -133,6 +155,7 @@ export function ProjectSidebar({
                     key={project.id}
                     project={project}
                     isActive={project.id === activeProjectId}
+                    onSelect={onSelectProject}
                     onRename={onRenameProject}
                     onDelete={onDeleteProject}
                   />

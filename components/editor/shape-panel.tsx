@@ -11,7 +11,10 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { useShapeDragPreview } from "@/hooks/use-shape-drag-preview";
+import {
+  useShapeDragPreview,
+  type ShapeGrabOffset,
+} from "@/hooks/use-shape-drag-preview";
 import {
   DEFAULT_SHAPE_SIZES,
   SHAPE_DRAG_MIME,
@@ -37,10 +40,12 @@ const SHAPE_OPTIONS: ShapeOption[] = [
 function handleDragStart(
   event: DragEvent<HTMLButtonElement>,
   shape: CanvasNodeShape,
+  grabOffset: ShapeGrabOffset,
 ) {
   const payload: ShapeDragPayload = {
     shape,
     ...DEFAULT_SHAPE_SIZES[shape],
+    ...grabOffset,
   };
 
   const serialized = JSON.stringify(payload);
@@ -67,8 +72,10 @@ export function ShapePanel() {
             onDragStart={(event) => {
               // The ghost must be installed before the payload is written:
               // `setDragImage` only takes effect while `dragstart` is running.
-              showPreview(event, shape);
-              handleDragStart(event, shape);
+              // It also reports where the cursor was pinned, which the drop
+              // handler needs, so the payload is written from its result.
+              const grabOffset = showPreview(event, shape);
+              handleDragStart(event, shape, grabOffset);
             }}
             onDragEnd={hidePreview}
             title={`Drag to add a ${label.toLowerCase()}`}

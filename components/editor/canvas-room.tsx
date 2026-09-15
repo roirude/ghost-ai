@@ -7,9 +7,9 @@ import {
   RoomProvider,
 } from "@liveblocks/react/suspense";
 
-import { Canvas, type CanvasImportHandle } from "@/components/editor/canvas";
+import { Canvas, type CanvasProps } from "@/components/editor/canvas";
 
-interface CanvasRoomProps extends CanvasImportHandle {
+interface CanvasRoomProps extends CanvasProps {
   roomId: string;
 }
 
@@ -45,12 +45,18 @@ class CanvasErrorBoundary extends Component<
   }
 }
 
-export function CanvasRoom({ roomId, onImportReady }: CanvasRoomProps) {
+export function CanvasRoom({
+  roomId,
+  projectId,
+  onImportReady,
+  onSaveStatusChange,
+  onSaveReady,
+}: CanvasRoomProps) {
   return (
     <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
       <RoomProvider
         id={roomId}
-        initialPresence={{ cursor: null, isThinking: false }}
+        initialPresence={{ cursor: null, thinking: false }}
       >
         <CanvasErrorBoundary
           fallback={
@@ -62,7 +68,12 @@ export function CanvasRoom({ roomId, onImportReady }: CanvasRoomProps) {
           <ClientSideSuspense
             fallback={<CanvasMessage>Loading canvas…</CanvasMessage>}
           >
-            <Canvas onImportReady={onImportReady} />
+            <Canvas
+              projectId={projectId}
+              onImportReady={onImportReady}
+              onSaveStatusChange={onSaveStatusChange}
+              onSaveReady={onSaveReady}
+            />
           </ClientSideSuspense>
         </CanvasErrorBoundary>
       </RoomProvider>

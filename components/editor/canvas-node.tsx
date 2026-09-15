@@ -8,6 +8,7 @@ import {
   type NodeProps,
 } from "@xyflow/react";
 import {
+  Fragment,
   useCallback,
   useEffect,
   useRef,
@@ -45,7 +46,7 @@ const HANDLE_POSITIONS = [
  * ring even where it sits on top of a light node fill.
  */
 const HANDLE_CLASS =
-  "!size-2 !border !border-bg-base !bg-copy-primary opacity-0 transition-opacity duration-150 group-hover:opacity-100";
+  "!size-2 !border !border-bg-base !bg-copy-primary opacity-0 transition-opacity duration-150 group-hover:opacity-100 z-20";
 
 /**
  * Resize affordances. The corner handles are small filled squares rather than
@@ -212,14 +213,35 @@ export function CanvasNode({
           ) : null}
         </div>
       </ShapeSurface>
+      {/*
+        Every side carries both a source and a target handle, so a drag can
+        start at any of the four and finish at any of the four. A source-only
+        handle is a valid connection *end* solely under `ConnectionMode.Loose`
+        and only once React Flow has resolved a target for the drop, which is
+        what left connections working reliably from the top alone; an explicit
+        target per side removes that dependency.
+
+        The two share a side, so the ids are suffixed by type: React Flow keys
+        a handle by node id plus handle id plus type, and a bare position id on
+        both would make the pair ambiguous to the edges that reference them.
+      */}
       {HANDLE_POSITIONS.map((position) => (
-        <Handle
-          key={position}
-          id={position}
-          type="source"
-          position={position}
-          className={HANDLE_CLASS}
-        />
+        <Fragment key={position}>
+          <Handle
+            id={`${position}-source`}
+            type="source"
+            position={position}
+            isConnectable
+            className={HANDLE_CLASS}
+          />
+          <Handle
+            id={`${position}-target`}
+            type="target"
+            position={position}
+            isConnectable
+            className={HANDLE_CLASS}
+          />
+        </Fragment>
       ))}
     </div>
   );

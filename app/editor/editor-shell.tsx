@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { CreateProjectDialog } from "@/components/editor/create-project-dialog";
@@ -22,6 +23,7 @@ export function EditorShell({
   sharedProjects,
   activeProjectId,
 }: EditorShellProps) {
+  const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const {
     dialog,
@@ -49,6 +51,7 @@ export function EditorShell({
           sharedProjects={sharedProjects}
           activeProjectId={activeProjectId}
           onClose={() => setIsSidebarOpen(false)}
+          onSelectProject={(project) => router.push(`/editor/${project.id}`)}
           onCreateProject={openCreateDialog}
           onRenameProject={openRenameDialog}
           onDeleteProject={openDeleteDialog}

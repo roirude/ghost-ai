@@ -1,7 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
 
+import { AiSidebar } from "@/components/editor/ai-sidebar";
 import { CanvasRoom } from "@/components/editor/canvas-room";
 import { CreateProjectDialog } from "@/components/editor/create-project-dialog";
 import { DeleteProjectDialog } from "@/components/editor/delete-project-dialog";
@@ -11,9 +13,9 @@ import { ShareDialog } from "@/components/editor/share-dialog";
 import { StarterTemplatesModal } from "@/components/editor/starter-templates-modal";
 import type { CanvasTemplate } from "@/components/editor/starter-templates";
 import { WorkspaceNavbar } from "@/components/editor/workspace-navbar";
+import type { CanvasSaveStatus } from "@/hooks/use-canvas-autosave";
 import { useProjectActions } from "@/hooks/use-project-actions";
 import { useShareDialog } from "@/hooks/use-share-dialog";
-import { cn } from "@/lib/utils";
 import type { Project } from "@/types/project";
 
 interface WorkspaceShellProps {
@@ -27,10 +29,12 @@ export function WorkspaceShell({
   ownedProjects,
   sharedProjects,
 }: WorkspaceShellProps) {
+  const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isAiSidebarOpen, setIsAiSidebarOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<CanvasSaveStatus>("idle");
 
   // The canvas publishes its import action here once the room is connected.
   // A ref rather than state on purpose: the shell only ever *calls* this, so
@@ -45,6 +49,34 @@ export function WorkspaceShell({
       importTemplateRef.current = importTemplate;
     },
     [],
+  );
+
+  // Same boundary, same reasoning as the import action above: the Save button
+  // sits in the navbar, outside the room, while the save itself belongs to the
+  // autosave hook inside it.
+  const saveRef = useRef<(() => void) | null>(null);
+
+  const handleSaveReady = useCallback((save: () => void) => {
+    saveRef.current = save;
+  }, []);
+
+  const handleSave = useCallback(() => {
+    // Null only while the room is still suspended, in which case there is no
+    // canvas on screen for the button to have been clicked over.
+    saveRef.current?.();
+  }, []);
+
+  // Closing here rather than on the destination's mount: the sidebar floats
+  // over the canvas, so leaving it open would cover the project just opened.
+  const handleSelectProject = useCallback(
+    (selected: Project) => {
+      setIsSidebarOpen(false);
+
+      if (selected.id !== project.id) {
+        router.push(`/editor/${selected.id}`);
+      }
+    },
+    [project.id, router],
   );
 
   const handleImportTemplate = useCallback((template: CanvasTemplate) => {
@@ -88,6 +120,8 @@ export function WorkspaceShell({
         onToggleAiSidebar={() => setIsAiSidebarOpen((open) => !open)}
         onOpenShare={() => setIsShareOpen(true)}
         onOpenTemplates={() => setIsTemplatesOpen(true)}
+        saveStatus={saveStatus}
+        onSave={handleSave}
       />
       {/*
         The canvas owns this whole region and is never resized by chrome: the
@@ -96,7 +130,13 @@ export function WorkspaceShell({
       */}
       <div className="relative min-h-0 flex-1 overflow-hidden bg-bg-base">
         <div className="absolute inset-0">
-          <CanvasRoom roomId={project.id} onImportReady={handleImportReady} />
+          <CanvasRoom
+            roomId={project.id}
+            projectId={project.id}
+            onImportReady={handleImportReady}
+            onSaveStatusChange={setSaveStatus}
+            onSaveReady={handleSaveReady}
+          />
         </div>
 
         <ProjectSidebar
@@ -105,25 +145,16 @@ export function WorkspaceShell({
           sharedProjects={sharedProjects}
           activeProjectId={project.id}
           onClose={() => setIsSidebarOpen(false)}
+          onSelectProject={handleSelectProject}
           onCreateProject={openCreateDialog}
           onRenameProject={openRenameDialog}
           onDeleteProject={openDeleteDialog}
         />
 
-        <aside
-          className={cn(
-            "absolute inset-y-0 right-0 z-40 flex w-80 flex-col border-l border-surface-border bg-bg-surface/95 shadow-[-8px_0_24px_-12px_rgba(0,0,0,0.7)] backdrop-blur-sm transition-transform duration-200 ease-out",
-            isAiSidebarOpen ? "translate-x-0" : "translate-x-full"
-          )}
-          aria-hidden={!isAiSidebarOpen}
-        >
-          <div className="flex items-center justify-between border-b border-surface-border px-4 py-3">
-            <h2 className="text-sm font-semibold text-copy-primary">AI Assistant</h2>
-          </div>
-          <div className="flex flex-1 items-center justify-center px-4 text-center">
-            <p className="text-sm text-copy-muted">AI chat coming soon</p>
-          </div>
-        </aside>
+        <AiSidebar
+          isOpen={isAiSidebarOpen}
+          onClose={() => setIsAiSidebarOpen(false)}
+        />
       </div>
 
       <CreateProjectDialog

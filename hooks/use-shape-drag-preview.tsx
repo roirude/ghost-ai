@@ -18,12 +18,26 @@ import {
  */
 const GHOST_OPACITY = 0.75;
 
+/**
+ * Where inside the ghost the browser pinned the cursor, in the ghost's own
+ * pixels. The drop handler needs exactly this to place the node where the ghost
+ * was drawn, so it is returned rather than recomputed at the drop site.
+ */
+export interface ShapeGrabOffset {
+  grabOffsetX: number;
+  grabOffsetY: number;
+}
+
 interface ShapeDragPreview {
   /**
    * Renders the ghost and hands it to the browser as the drag image. Call from
-   * `onDragStart`, before writing the drag payload.
+   * `onDragStart`, before writing the drag payload. Returns the cursor's
+   * position within the ghost, which belongs in that payload.
    */
-  showPreview: (event: DragEvent<Element>, shape: CanvasNodeShape) => void;
+  showPreview: (
+    event: DragEvent<Element>,
+    shape: CanvasNodeShape,
+  ) => ShapeGrabOffset;
   /** Tears the ghost down. Call from `onDragEnd`. */
   hidePreview: () => void;
 }
@@ -105,9 +119,15 @@ export function useShapeDragPreview(): ShapeDragPreview {
       hostRef.current = host;
       rootRef.current = root;
 
-      // Centered on the cursor, matching where `canvas.tsx` places the dropped
-      // node relative to the drop point.
-      event.dataTransfer.setDragImage(host, width / 2, height / 2);
+      // Centered on the cursor. The same offset is handed back so the drop
+      // handler subtracts precisely what `setDragImage` pinned, instead of
+      // assuming a centring the ghost might not actually have used.
+      const grabOffsetX = width / 2;
+      const grabOffsetY = height / 2;
+
+      event.dataTransfer.setDragImage(host, grabOffsetX, grabOffsetY);
+
+      return { grabOffsetX, grabOffsetY };
     },
     [hidePreview],
   );
